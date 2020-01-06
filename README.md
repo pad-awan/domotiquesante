@@ -21,7 +21,7 @@
     Mise en place, utilisation rapide
         Créer un script Python SQL vers XAMPP pour créer physiquement la base de donnée relationnelle
         Collecter les données domotiques suite au déplacement( Ouverture porte, allumage lumière, bandeau limuneux, bracelet
-        Créer une application orienté technique
+        Créer une application orienté technique dans laquelle on aurait des formulaires pour insérer modifier et supprimer des données.
   
     Licence(s)
     
