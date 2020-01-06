@@ -1,8 +1,53 @@
+<!doctype html>
+
+<html lang="fr">
+
+<head>
+
+	<meta charset="UTF-8">
+  <meta name ="viewport"
+        content ="width-device-width, user-scalable =no, initial-scalable=1.0, maximum-scale = 1.0, minimum-scale=1.0">
+  <meta http-equiv ="X-UA-Compatible" content="ie-edge">
+  <link
+  ref="stylesheet" href="css/wing.css">
+</head>
+
+<th>Liste des utilisateurs</th>
+
 <table border =1>
+</br>
+  <th>Id</th>
+  <th>Nom</th>
+  <th>Prénom</th>
+  <th>Titre</th>
+  <th>Authentification</th>
+  <th>date de naissance</th>
+  <th>début contrat</th>
+  <th>tel1</th>
+  <th>tel2</th>
+  <th>mail1</th>
+  <th>Mail2</th>
+  <th>Notes</th>
+  <th>Statut</th>
+  <th>Autonomie</th>
   {% for users in usersDetails %}
   <tr>
     <td> {{users[0]}}</td>
     <td> {{users[1]}}</td>
+    <td> {{users[2]}}</td>
+    <td> {{users[3]}}</td>
+    <td> {{users[4]}}</td>
+    <td> {{users[5]}}</td>
+    <td> {{users[6]}}</td>
+    <td> {{users[7]}}</td>
+    <td> {{users[8]}}</td>
+    <td> {{users[9]}}</td>
+    <td> {{users[10]}}</td>
+    <td> {{users[11]}}</td>
+    <td> {{users[12]}}</td>
+    <td> {{users[13]}}</td>
+
   </tr>
   {% endfor %}
 </table>
+</html>
