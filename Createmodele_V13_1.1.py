@@ -1,0 +1,371 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jan 09 22:25:07 2019
+
+@author: arnaudhub
+"""
+
+#import pandas as pd
+from sqlalchemy import create_engine
+from sqlalchemy.sql import text
+import configparser,os
+from urllib import parse
+
+#import sql.connector
+
+config = configparser.ConfigParser()
+config.read_file(open(os.path.expanduser("~/Bureau/OBJDOMO.cnf")))
+
+DB = "OBJETDOMO_V13_1.1?charset=utf8"
+
+CNF="OBJDOMO"
+
+engine = create_engine("mysql://%s:%s@%s/%s" % (config[CNF]['user'], parse.quote_plus(config[CNF]['password']), config[CNF]['host'], DB))
+user = config['OBJDOMO']['user']
+password=config['OBJDOMO']['password']
+
+import mysql.connector
+from mysql.connector import Error
+
+try:
+
+    connection = mysql.connector.connect(host="127.0.0.1",
+                                         database="OBJETDOMO_V13_1.1",
+                                         user=user,
+                                         password=password)
+
+    cursor = connection.cursor()
+    cursor.execute("""SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;""")
+    cursor.execute("""SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;""")
+    cursor.execute("""SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL,ALLOW_INVALID_DATES';""")
+    cursor.execute("""DROP SCHEMA IF EXISTS `OBJETDOMO_V13_1.1`;""")
+    print("DROP SCHEMA")
+    cursor.execute("""CREATE SCHEMA IF NOT EXISTS `OBJETDOMO_V13_1.1` DEFAULT CHARACTER SET utf8 ;""")
+    cursor.execute("""USE `OBJETDOMO_V13_1.1`;""")
+    cursor.execute("""DROP TABLE IF EXISTS `OBJETDOMO_V13_1.1`.`T_A_TYPE_ADRESSE_TAD` ;""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS `OBJETDOMO_V13_1.1`.`T_A_TYPE_ADRESSE_TAD` (
+      `TAD_ID` INT NOT NULL AUTO_INCREMENT,
+      `TAD_LIBELLE` VARCHAR(45) NOT NULL,
+      PRIMARY KEY (`TAD_ID`))
+    ENGINE = InnoDB;""")
+    print("T_A_TYPE_ADRESSE_TAD Table created successfully ")
+
+    cursor.execute("""DROP TABLE IF EXISTS `OBJETDOMO_V13_1.1`.`T_R_GENRE_GEN` ;""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS `OBJETDOMO_V13_1.1`.`T_R_GENRE_GEN` (
+      `GEN_ID` INT NOT NULL AUTO_INCREMENT,
+      `GEN_LIBELLE` VARCHAR(16) NOT NULL,
+      PRIMARY KEY (`GEN_ID`))
+    ENGINE = InnoDB;""")
+    print("T_R_GENRE_GEN Table created successfully ")
+
+    cursor.execute("""DROP TABLE IF EXISTS `OBJETDOMO_V13_1.1`.`T_A_STATUT_STT` ;""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS `OBJETDOMO_V13_1.1`.`T_A_STATUT_STT` (
+      `STT_ID` INT NOT NULL AUTO_INCREMENT,
+      `STT_LIBELLE` VARCHAR(45) NOT NULL,
+      `STT_TYPE` VARCHAR(45) NOT NULL,
+      PRIMARY KEY (`STT_ID`))
+    ENGINE = InnoDB;""")
+    print("T_A_STATUT_STT Table created successfully ")
+
+    cursor.execute("""DROP TABLE IF EXISTS `OBJETDOMO_V13_1.1`.`T_E_PERSONNEPHYSIQUE_PRS` ;""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS `OBJETDOMO_V13_1.1`.`T_E_PERSONNEPHYSIQUE_PRS` (
+      `PRS_ID` INT NOT NULL AUTO_INCREMENT,
+      `PRS_NOM` VARCHAR(40) NOT NULL,
+      `PRS_PRENOM` VARCHAR(40) NOT NULL,
+      `GEN_ID` INT NOT NULL,
+      `PRS_NOTES` VARCHAR(300) NULL,
+      `STT_ID` INT NOT NULL,
+      PRIMARY KEY (`PRS_ID`),
+      INDEX `fk_TE_PERSONNE_PRS_1_idx` (`GEN_ID` ASC),
+      INDEX `fk_TE_PERSONNE_PRS_2_idx` (`STT_ID` ASC),
+      INDEX `index4` (`PRS_NOM` ASC, `PRS_PRENOM` ASC),
+      CONSTRAINT `fk_TE_PERSONNE_PRS_1`
+        FOREIGN KEY (`GEN_ID`)
+        REFERENCES `OBJETDOMO_V13_1.1`.`T_R_GENRE_GEN` (`GEN_ID`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION,
+      CONSTRAINT `fk_TE_PERSONNE_PRS_2`
+        FOREIGN KEY (`STT_ID`)
+        REFERENCES `OBJETDOMO_V13_1.1`.`T_A_STATUT_STT` (`STT_ID`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION)
+    ENGINE = InnoDB;""")
+    print('T_E_PERSONNEPHYSIQUE_PRS Table created successfully')
+
+    cursor.execute("""DROP TABLE IF EXISTS `OBJETDOMO_V13_1.1`.`T_A_VILLE_CITY` ;""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS `OBJETDOMO_V13_1.1`.`T_A_VILLE_CITY` (
+      `CITY_ID` INT NOT NULL AUTO_INCREMENT,
+      `CITY_CODEPOSTAL` CHAR(5) NOT NULL,
+      `CITY_COMMUNE` VARCHAR(60) NOT NULL,
+      PRIMARY KEY (`CITY_ID`),
+      INDEX `index2` (`CITY_CODEPOSTAL` ASC, `CITY_COMMUNE` ASC))
+    ENGINE = InnoDB;""")
+    print("T_A_VILLE_CITY Table created successfully ")
+
+    cursor.execute("""DROP TABLE IF EXISTS `OBJETDOMO_V13_1.1`.`T_E_ADRESSEPOSTALE_ADR` ;""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS `OBJETDOMO_V13_1.1`.`T_E_ADRESSEPOSTALE_ADR` (
+      `ADR_ID` INT NOT NULL AUTO_INCREMENT,
+      `ADR_VOIEPRINCIPALE` VARCHAR(38) NOT NULL,
+      `ADR_COMPLEMENTIDENTIFICATION` VARCHAR(38) NOT NULL,
+      `CITY_ID` INT NOT NULL,
+      `TAD_ID` INT NOT NULL COMMENT '	',
+      PRIMARY KEY (`ADR_ID`),
+      INDEX `fk_TE_ADRESSE_ADR_1_idx` (`TAD_ID` ASC),
+      INDEX `fk_TE_ADRESSEPOSTALE_ADR_1_idx` (`CITY_ID` ASC),
+      CONSTRAINT `fk_TE_ADRESSE_ADR_1`
+        FOREIGN KEY (`TAD_ID`)
+        REFERENCES `OBJETDOMO_V13_1.1`.`T_A_TYPE_ADRESSE_TAD` (`TAD_ID`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION,
+      CONSTRAINT `fk_TE_ADRESSEPOSTALE_ADR_1`
+        FOREIGN KEY (`CITY_ID`)
+        REFERENCES `OBJETDOMO_V13_1.1`.`T_A_VILLE_CITY` (`CITY_ID`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION)
+    ENGINE = InnoDB;""")
+    print('T_E_ADRESSEPOSTALE_ADR Table created successfully')
+
+    cursor.execute("""DROP TABLE IF EXISTS `OBJETDOMO_V13_1.1`.`T_R_TYPEPRODUIT_TPDT` ;""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS `OBJETDOMO_V13_1.1`.`T_R_TYPEPRODUIT_TPDT` (
+      `TPDT_ID` INT NOT NULL AUTO_INCREMENT,
+      `TPDT_CATEGORIE` VARCHAR(60) NULL,
+      PRIMARY KEY (`TPDT_ID`))
+    ENGINE = InnoDB;""")
+    print('T_R_TYPEPRODUIT_TPDT Table created successfully')
+
+    cursor.execute("""DROP TABLE IF EXISTS `OBJETDOMO_V13_1.1`.`T_E_PRODUIT_PDT` ;""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS `OBJETDOMO_V13_1.1`.`T_E_PRODUIT_PDT` (
+      `PDT_SERIALNUMBER` INT NOT NULL AUTO_INCREMENT,
+      `PDT_NOM` VARCHAR(45) NOT NULL,
+      `PDT_MARQUE` VARCHAR(45) NOT NULL,
+      `PDT_VALEUR` VARCHAR(45) NOT NULL,
+      `PDT_HEURE` VARCHAR(45) NOT NULL,
+      `PDT_DUREE` VARCHAR(45) NOT NULL,
+      `PDT_SOURCE` VARCHAR(45) NOT NULL,
+      `PDT_REGLE` VARCHAR(45) NOT NULL,
+      `TPDT_ID` INT NOT NULL,
+      PRIMARY KEY (`PDT_SERIALNUMBER`),
+      INDEX `index2` (`PDT_NOM` ASC, `PDT_MARQUE` ASC),
+      INDEX `fk_TE_PRODUIT_PDT_1_idx` (`TPDT_ID` ASC),
+      CONSTRAINT `fk_TE_PRODUIT_PDT_1`
+        FOREIGN KEY (`TPDT_ID`)
+        REFERENCES `OBJETDOMO_V13_1.1`.`T_R_TYPEPRODUIT_TPDT` (`TPDT_ID`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION)
+    ENGINE = InnoDB;""")
+    print('T_E_PRODUIT_PDT Table created successfully')
+
+    cursor.execute("""DROP TABLE IF EXISTS `OBJETDOMO_V13_1.1`.`T_R_AUTHENTIFICATION_AUTH` ;""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS `OBJETDOMO_V13_1.1`.`T_R_AUTHENTIFICATION_AUTH` (
+      `AUTH_ID` INT NOT NULL AUTO_INCREMENT,
+      `AUTH_USERNAME` VARCHAR(45) NOT NULL,
+      `AUTH_PASSWORD` VARCHAR(45) NOT NULL,
+      `PRS_ID` INT NOT NULL,
+      PRIMARY KEY (`AUTH_ID`),
+      INDEX `index2` (`AUTH_USERNAME` ASC, `AUTH_PASSWORD` ASC),
+      INDEX `fk_TR_AUTHENTIFICATION_AUTH_1_idx` (`PRS_ID` ASC),
+      CONSTRAINT `fk_TR_AUTHENTIFICATION_AUTH_1`
+        FOREIGN KEY (`PRS_ID`)
+        REFERENCES `OBJETDOMO_V13_1.1`.`T_E_PERSONNEPHYSIQUE_PRS` (`PRS_ID`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION)
+    ENGINE = InnoDB;""")
+    print('T_R_AUTHENTIFICATION_AUTH Table created successfully')
+
+    cursor.execute("""DROP TABLE IF EXISTS `OBJETDOMO_V13_1.1`.`T_E_LOCALISATIONPRODUIT_LOC` ;""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS `OBJETDOMO_V13_1.1`.`T_E_LOCALISATIONPRODUIT_LOC` (
+      `LOC_ID` INT NOT NULL AUTO_INCREMENT,
+      `LOC_LIBELLE` VARCHAR(45) NOT NULL,
+      `LOC_TYPE` VARCHAR(45) NOT NULL,
+      `LOC_NOTES` VARCHAR(300) NULL,
+      PRIMARY KEY (`LOC_ID`),
+      INDEX `index2` (`LOC_LIBELLE` ASC, `LOC_TYPE` ASC))
+    ENGINE = InnoDB;""")
+    print('T_E_LOCALISATIONPRODUIT_LOC Table created successfully')
+
+    cursor.execute("""DROP TABLE IF EXISTS `OBJETDOMO_V13_1.1`.`T_R_TYPEINTERVENTION_TPI` ;""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS `OBJETDOMO_V13_1.1`.`T_R_TYPEINTERVENTION_TPI` (
+      `TPI_ID` INT NOT NULL AUTO_INCREMENT,
+      `TPI_LIBELLE` VARCHAR(45) NOT NULL,
+      `TPI_TYPE` VARCHAR(45) NOT NULL,
+      PRIMARY KEY (`TPI_ID`),
+      INDEX `index2` (`TPI_LIBELLE` ASC, `TPI_TYPE` ASC))
+    ENGINE = InnoDB;""")
+    print('T_R_TYPEINTERVENTION_TPI Table created successfully')
+
+    cursor.execute("""DROP TABLE IF EXISTS `OBJETDOMO_V13_1.1`.`T_A_AUTONOMIE_AUT` ;""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS `OBJETDOMO_V13_1.1`.`T_A_AUTONOMIE_AUT` (
+      `AUT_ID` INT NOT NULL AUTO_INCREMENT,
+      `AUT_DEPENDANCE` VARCHAR(5) NOT NULL,
+      `AUT_DEFINITION` VARCHAR(105) NOT NULL,
+      PRIMARY KEY (`AUT_ID`),
+      INDEX `index2` (`AUT_DEPENDANCE` ASC, `AUT_DEFINITION` ASC))
+    ENGINE = InnoDB;""")
+    print('T_A_AUTONOMIE_AUT Table created successfully')
+
+    cursor.execute("""DROP TABLE IF EXISTS `OBJETDOMO_V13_1.1`.`T_R_BENEFICIAIRE_CTT` ;""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS `OBJETDOMO_V13_1.1`.`T_R_BENEFICIAIRE_CTT` (
+      `CTT_ID` INT NOT NULL AUTO_INCREMENT,
+      `CTT_INTITULECONTRAT` VARCHAR(45) NOT NULL,
+      `CTT_REFCONTRAT` VARCHAR(45) NOT NULL,
+      `AUT_ID` INT NOT NULL,
+      `CTT_DEBUTCONTRAT` DATE NOT NULL,
+      `CTT_DATENAISSANCEBENEFICIAIRE` DATE NOT NULL,
+      `CTT_TEL` VARCHAR(45) NULL,
+      `PRS_ID` INT NOT NULL,
+      PRIMARY KEY (`CTT_ID`),
+      INDEX `fk_TR_CONTRAT_CTT_1_idx` (`AUT_ID` ASC),
+      INDEX `fk_TR_CONTRATBENEFICIAIRE_CTT_TE_PERSONNE_PRS1_idx` (`PRS_ID` ASC),
+      CONSTRAINT `fk_TR_CONTRAT_CTT_1`
+        FOREIGN KEY (`AUT_ID`)
+        REFERENCES `OBJETDOMO_V13_1.1`.`T_A_AUTONOMIE_AUT` (`AUT_ID`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION,
+      CONSTRAINT `fk_TE_PERSONNE_PRS1`
+        FOREIGN KEY (`PRS_ID`)
+        REFERENCES `OBJETDOMO_V13_1.1`.`T_E_PERSONNEPHYSIQUE_PRS` (`PRS_ID`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION)
+    ENGINE = InnoDB;""")
+    print('T_R_BENEFICIAIRE_CTT Table created successfully')
+
+
+
+    cursor.execute("""DROP TABLE IF EXISTS `OBJETDOMO_V13_1.1`.`T_E_INTERVENTION_INT` ;""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS `OBJETDOMO_V13_1.1`.`T_E_INTERVENTION_INT` (
+      `INT_ID` INT NOT NULL AUTO_INCREMENT,
+      `ADR_ID` INT NOT NULL,
+      `INT_DATEINTERVENTION` DATE NOT NULL,
+      `INT_PRESENCEANIMALMOYEN` TINYINT(1) NOT NULL DEFAULT 0,
+      `NOTES` VARCHAR(300) NULL,
+      `CTT_ID` INT NOT NULL,
+      `TPI_ID` INT NOT NULL,
+      PRIMARY KEY (`INT_ID`),
+      INDEX `fk_TR_INTERVENTION_INT_1_idx` (`TPI_ID` ASC),
+      INDEX `fk_TR_INTERVENTION_INT_2_idx` (`CTT_ID` ASC),
+      CONSTRAINT `fk_TR_INTERVENTION_INT_1`
+        FOREIGN KEY (`TPI_ID`)
+        REFERENCES `OBJETDOMO_V13_1.1`.`TR_TYPEINTERVENTION_TPI` (`TPI_ID`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION,
+      CONSTRAINT `fk_TR_INTERVENTION_INT_2`
+        FOREIGN KEY (`CTT_ID`)
+        REFERENCES `OBJETDOMO_V13_1.1`.`T_R_BENEFICIAIRE_CTT` (`CTT_ID`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION)
+    ENGINE = InnoDB;""")
+    print('T_E_INTERVENTION_INT Table created successfully')
+
+
+##############
+
+    cursor.execute("""DROP TABLE IF EXISTS `OBJETDOMO_V13_1.1`.`T_R_INTERCONNEXION_INTCO` ;""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS `OBJETDOMO_V13_1.1`.`T_R_INTERCONNEXION_INTCO` (
+      `INTCO_ID` INT NOT NULL AUTO_INCREMENT,
+      `DATEEVENEMENT` DATETIME(6) NOT NULL,
+      `VALEUR` VARCHAR(45) NOT NULL,
+      `PDT_ID` INT NOT NULL,
+      `INTCO_ADRESSEIP` VARCHAR(20) NOT NULL,
+      PRIMARY KEY (`INTCO_ID`),
+      INDEX `fk_TR_COMMUNICATION_COM_1_idx` (`PDT_ID` ASC),
+      CONSTRAINT `fk_TR_COMMUNICATION_COM_1`
+        FOREIGN KEY (`PDT_ID`)
+        REFERENCES `OBJETDOMO_V13_1.1`.`T_E_PRODUIT_PDT` (`PDT_SERIALNUMBER`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION)
+    ENGINE = InnoDB;""")
+    print('T_R_INTERCONNEXION_INTCO Table created successfully')
+
+
+    cursor.execute("""DROP TABLE IF EXISTS `OBJETDOMO_V13_1.1`.`T_J_CTT_ADR_PDT_INT` ;""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS `OBJETDOMO_V13_1.1`.`T_J_CTT_ADR_PDT_INT` (
+      `PDT_SERIALNUMBER` INT NOT NULL,
+      `INT_ID` INT NOT NULL,
+      `NOTES` VARCHAR(300) NULL,
+      `LOC_ID` INT NOT NULL,
+      `CTT_ID` INT NOT NULL,
+      `ADR_ID` INT NOT NULL,
+      INDEX `fk_TJ_CTT_ADR_PDT_INT_2_idx` (`LOC_ID` ASC),
+      INDEX `fk_TJ_CTT_ADR_PDT_INT_3_idx` (`PDT_SERIALNUMBER` ASC),
+      INDEX `fk_TJ_CTT_ADR_PDT_INT_4_idx` (`INT_ID` ASC),
+      INDEX `fk_TJ_CTT_ADR_PDT_INT_5_idx` (`CTT_ID` ASC),
+      INDEX `fk_TJ_CTT_ADR_PDT_INT_1_idx` (`ADR_ID` ASC),
+      CONSTRAINT `fk_TJ_CTT_ADR_PDT_INT_2`
+        FOREIGN KEY (`LOC_ID`)
+        REFERENCES `OBJETDOMO_V13_1.1`.`TE_LOCALISATIONPRODUIT_LOC` (`LOC_ID`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION,
+      CONSTRAINT `fk_TJ_CTT_ADR_PDT_INT_3`
+        FOREIGN KEY (`PDT_SERIALNUMBER`)
+        REFERENCES `OBJETDOMO_V13_1.1`.`T_E_PRODUIT_PDT` (`PDT_SERIALNUMBER`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION,
+      CONSTRAINT `fk_TJ_CTT_ADR_PDT_INT_4`
+        FOREIGN KEY (`INT_ID`)
+        REFERENCES `OBJETDOMO_V13_1.1`.`T_E_INTERVENTION_INT` (`INT_ID`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION,
+      CONSTRAINT `fk_TJ_CTT_ADR_PDT_INT_5`
+        FOREIGN KEY (`CTT_ID`)
+        REFERENCES `OBJETDOMO_V13_1.1`.`T_R_BENEFICIAIRE_CTT` (`CTT_ID`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION,
+      CONSTRAINT `fk_TJ_CTT_ADR_PDT_INT_1`
+        FOREIGN KEY (`ADR_ID`)
+        REFERENCES `OBJETDOMO_V13_1.1`.`T_E_ADRESSEPOSTALE_ADR` (`ADR_ID`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION)
+    ENGINE = InnoDB;""")
+    print("table jointure T_J_CTT_ADR_PDT_INT créée ")
+
+    cursor.execute("""DROP TABLE IF EXISTS `OBJETDOMO_V13_1.1`.`T_E_PERSONNEMORALE_PEM` ;""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS `OBJETDOMO_V13_1.1`.`T_E_PERSONNEMORALE_PEM` (
+      `PEM_NUMEROSIREN` INT NOT NULL,
+      `PEM_RAISONSOCIALE` VARCHAR(45) NOT NULL,
+      `PEM_TYPEACTIVITE` VARCHAR(60) NOT NULL,
+      `PEM_SIRET` VARCHAR(45) NULL,
+      PRIMARY KEY (`PEM_NUMEROSIREN`),
+      INDEX `index2` (`PEM_RAISONSOCIALE` ASC))
+    ENGINE = InnoDB;""")
+    print('T_E_PERSONNEMORALE_PEM créée')
+
+    cursor.execute("""DROP TABLE IF EXISTS `OBJETDOMO_V13_1.1`.`T_J_EMPLOYE_EMP` ;""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS `OBJETDOMO_V13_1.1`.`T_J_EMPLOYE_EMP` (
+      `EMP_ID` INT NOT NULL,
+      `PEM_ID` INT NOT NULL,
+      `INT_ID` INT NOT NULL,
+      `EMP_TELEPHONE` CHAR(15) NOT NULL,
+      `EMP_EMAIL` VARCHAR(45) NOT NULL,
+      INDEX `fk_TE_PRESTATAIRE_PREST_2_idx` (`PEM_ID` ASC),
+      INDEX `fk_TE_PRESTATAIRE_PREST_3_idx` (`INT_ID` ASC),
+      CONSTRAINT `fk_TE_PRESTATAIRE_PREST_1`
+        FOREIGN KEY (`EMP_ID`)
+        REFERENCES `OBJETDOMO_V13_1.1`.`T_E_PERSONNEPHYSIQUE_PRS` (`PRS_ID`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION,
+      CONSTRAINT `fk_TE_PRESTATAIRE_PREST_2`
+        FOREIGN KEY (`PEM_ID`)
+        REFERENCES `OBJETDOMO_V13_1.1`.`T_E_PERSONNEMORALE_PEM` (`PEM_NUMEROSIREN`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION,
+      CONSTRAINT `fk_TE_PRESTATAIRE_PREST_3`
+        FOREIGN KEY (`INT_ID`)
+        REFERENCES `OBJETDOMO_V13_1.1`.`T_E_INTERVENTION_INT` (`INT_ID`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION)
+    ENGINE = InnoDB;""")
+
+    print('T_J_EMPLOYE_EMP Table created successfully')
+    cursor.execute("""SET SQL_MODE=@OLD_SQL_MODE;""")
+    cursor.execute("""SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;""")
+    cursor.execute("""SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;""")
+
+except mysql.connector.Error as error:
+    print("Failed to create table in MySQL: {}".format(error))
+finally:
+    if (connection.is_connected()):
+
+        cursor.close()
+        connection.close()
+        print("MySQL connection is closed")
